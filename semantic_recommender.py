@@ -2,7 +2,7 @@ import re
 import numpy as np
 
 from catalogue import create_assessment_text
-from embeddings import model
+from embeddings import get_model
 from recommendation import build_reason
 
 def contains_word(text, word):
@@ -66,7 +66,7 @@ def semantic_recommend(query, catalogue, assessment_embeddings):
             if 0 < df < 0.15 * doc_count:
                 rare_query_words.append(qw)
 
-    query_embedding = model.encode(query)
+    query_embedding = get_model().encode(query)
 
     scores = []
 
