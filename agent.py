@@ -69,7 +69,7 @@ def run_agent(messages, catalogue, assessment_embeddings):
         prompt += f"{role}: {msg.content}\n"
     prompt += "\nRespond in the required JSON format."
     
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     
     # Run loop up to 3 times to allow tool usage and resolving
     for i in range(3):
