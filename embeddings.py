@@ -3,7 +3,7 @@ from sentence_transformers import SentenceTransformer
 from catalogue import create_assessment_text
 
 model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
+    "model/all-MiniLM-L6-v2"
 )
 
 def build_assessment_embeddings(catalogue):
