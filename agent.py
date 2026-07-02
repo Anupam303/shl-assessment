@@ -84,6 +84,9 @@ def run_agent(messages, catalogue, assessment_embeddings):
             response_text = response.text.strip()
             data = json.loads(response_text)
         except Exception as e:
+            print("ERROR calling Gemini API:", str(e))
+            import traceback
+            traceback.print_exc()
             return ChatResponse(
                 reply="I encountered an issue processing your request. Please try again.",
                 recommendations=[],
