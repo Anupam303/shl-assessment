@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+numpy
+sentence-transformers
+google-generativeai
+pydantic
+torch --index-url https://download.pytorch.org/whl/cpu
