@@ -6,8 +6,8 @@ from embeddings import build_assessment_embeddings
 
 app = FastAPI()
 
+# Load the catalogue and compute embeddings once at startup
 catalogue = load_catalogue()
-
 assessment_embeddings = build_assessment_embeddings(catalogue)
 
 @app.get("/")
