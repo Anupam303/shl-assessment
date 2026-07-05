@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from catalogue import load_catalogue
-from recommendation import recommend
 from models import ChatRequest, ChatResponse
 from agent import run_agent
 from embeddings import build_assessment_embeddings
