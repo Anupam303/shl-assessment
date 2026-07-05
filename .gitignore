@@ -1,0 +1,10 @@
+# Virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Local-only documents (keep off GitHub)
+approach_document.md
+approach_document.pdf
