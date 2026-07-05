@@ -8,3 +8,11 @@ __pycache__/
 # Local-only documents (keep off GitHub)
 approach_document.md
 approach_document.pdf
+
+# Study Guides & Playbooks
+codebase_deep_dive.md
+api_flow_guide.md
+interview_qa_guide.md
+interview_strategy_guide.md
+line_by_line_explanation.md
+assessment_scenarios_guide.md
