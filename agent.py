@@ -56,13 +56,21 @@ def find_catalog_item(name, url, catalogue):
     return None
 
 def get_test_type(item):
+    """
+    Determines whether an assessment is a Personality ("P") or Knowledge ("K") test.
+    Checks tags/keys (like 'personality', 'behavior', 'opq') and name substrings.
+    """
     keys = [k.lower() for k in item.get("keys", [])]
     name = item.get("name", "").lower()
     is_personality = any("personality" in k or "behavior" in k or "opq" in k for k in keys) or "opq" in name
     return "P" if is_personality else "K"
 
 def run_agent(messages, catalogue, assessment_embeddings):
-    # Formulate chat history
+    """
+    Main orchestration loop that coordinates message histories, talks to Gemini, 
+    executes semantic database search tools, and validates the final response.
+    """
+    # 1. Format the conversation log from the list of Pydantic messages
     prompt = "Conversation history:\n"
     for msg in messages:
         role = "User" if msg.role == "user" else "Assistant"
@@ -71,9 +79,10 @@ def run_agent(messages, catalogue, assessment_embeddings):
     
     model = genai.GenerativeModel("gemini-flash-latest")
     
-    # Run loop up to 3 times to allow tool usage and resolving
+    # 2. ReAct Agent Loop: Run up to 3 times to allow internal database searches and response generation
     for i in range(3):
         try:
+            # Query Gemini using the System Prompt guidelines and the formatted conversation prompt
             response = model.generate_content(
                 contents=[
                     {"role": "user", "parts": [SYSTEM_PROMPT + "\n\n" + prompt]}
@@ -84,6 +93,7 @@ def run_agent(messages, catalogue, assessment_embeddings):
             response_text = response.text.strip()
             data = json.loads(response_text)
         except Exception as e:
+            # Safe exception handling to ensure server doesn't crash on network/API errors
             print("ERROR calling Gemini API:", str(e))
             import traceback
             traceback.print_exc()
@@ -93,12 +103,14 @@ def run_agent(messages, catalogue, assessment_embeddings):
                 end_of_conversation=False
             )
             
+        # 3. Handle Tool Calls: If the LLM requests a search, execute it in Python
         if "tool_call" in data and data["tool_call"] == "search_catalogue":
             query = data.get("query", "")
-            # Invoke semantic search
+            
+            # Run semantic hybrid search on our catalogue
             search_results = semantic_recommend(query, catalogue, assessment_embeddings)
             
-            # Format clean search results for the LLM
+            # Format search results to feed back to the LLM
             clean_results = []
             for r in search_results:
                 clean_results.append({
@@ -108,19 +120,23 @@ def run_agent(messages, catalogue, assessment_embeddings):
                     "description": r.get("reason", "")
                 })
             
+            # Append search results to conversation context and loop back
             prompt += f"\nSystem: Tool 'search_catalogue' with query '{query}' returned: {json.dumps(clean_results)}\n"
             continue
+        
+        # 4. Handle Final Reply: If the LLM returns a response for the user
         else:
             reply = data.get("reply", "")
             recs_data = data.get("recommendations", [])
             end_of_conversation = data.get("end_of_conversation", False)
             
+            # Grounding layer: Programmatically verify that every recommendation exists in the catalog
             recs = []
             for r in recs_data:
                 rec_name = r.get("name", "")
                 rec_url = r.get("url", "")
                 
-                # Match against the actual catalogue
+                # Match against the actual catalogue to filter out hallucinations
                 matched_item = find_catalog_item(rec_name, rec_url, catalogue)
                 if matched_item:
                     recs.append(Recommendation(
@@ -129,14 +145,14 @@ def run_agent(messages, catalogue, assessment_embeddings):
                         test_type=get_test_type(matched_item)
                     ))
             
-            # If the LLM declared end of conversation but we have no valid recommendations mapped,
-            # or if the recommendations list was filtered to empty, let's keep it false unless truly empty is expected.
+            # Return the grounded, validated ChatResponse
             return ChatResponse(
                 reply=reply,
                 recommendations=recs,
                 end_of_conversation=end_of_conversation
             )
             
+    # 5. Fallback return statement if the loop runs out of turns
     return ChatResponse(
         reply="I am looking for the best assessments, please let me know if you have specific criteria.",
         recommendations=[],
