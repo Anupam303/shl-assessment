@@ -1,6 +1,5 @@
 import os
 import json
-import re
 import google.generativeai as genai
 from models import ChatResponse, Recommendation
 from semantic_recommender import semantic_recommend

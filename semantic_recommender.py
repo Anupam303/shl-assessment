@@ -1,7 +1,6 @@
 import re
 import numpy as np
 
-from catalogue import create_assessment_text
 from embeddings import get_model
 from recommendation import build_reason
 
